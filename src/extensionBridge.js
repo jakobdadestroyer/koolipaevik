@@ -87,6 +87,8 @@ export function mergeDiary(oldDiary, newDiary) {
   return {
     ...newDiary,
     messages: newDiary.messages?.length ? newDiary.messages : oldDiary.messages || [],
+    upcoming: newDiary.upcoming || oldDiary.upcoming || [],
+    absenceSummary: newDiary.absenceSummary || oldDiary.absenceSummary || null,
     lessons: [...newDiary.lessons, ...kept].sort((a, b) => b.date.localeCompare(a.date)),
   };
 }
