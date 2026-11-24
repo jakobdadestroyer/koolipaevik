@@ -30,6 +30,10 @@ async function decodeHashPayload(b64) {
 
 function readHash() {
   const h = window.location.hash;
+  if (h.startsWith("#viga=")) {
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    return { error: decodeURIComponent(h.slice(6)) };
+  }
   if (!h.startsWith(`#${HASH_KEY}=`)) return null;
   const params = new URLSearchParams(h.slice(1));
   // Eemaldame andmed aadressiribalt kohe (ei jää ajalukku ega jagatavasse linki).
@@ -57,6 +61,7 @@ export function useExtensionSnapshot() {
   useEffect(() => {
     // 1) Järjehoidja
     const incoming = readHash();
+    if (incoming?.error) setError(incoming.error);
     if (incoming?.data) {
       decodeHashPayload(incoming.data)
         .then((html) => accept(html, incoming.savedAt, incoming.origin))
@@ -92,5 +97,10 @@ export function mergeDiary(oldDiary, newDiary) {
     lessons: [...newDiary.lessons, ...kept].sort((a, b) => b.date.localeCompare(a.date)),
   };
 }
+
+// Kiirkäskluse fail (iPhone). Avaneb Kiirkäskluste rakenduses ja küsib "Lisa kiirkäsklus".
+export const SHORTCUT_URL = "./Koolipaevik.shortcut";
+// Pane true, kui allkirjastatud Koolipaevik.shortcut on public/ kaustas.
+export const SHORTCUT_READY = false;
 
 export const isNewer = (diary, current) => !current?.generatedAt || Date.parse(diary.generatedAt) > Date.parse(current.generatedAt);
