@@ -3,6 +3,7 @@ import { BookOpen, MessageSquare, Sparkles, ChevronDown, ChevronUp, FileText, Ar
 import { MOCK_DATA } from "./mockData";
 import { supabase, loadUserData, saveDiary, saveNotes } from "./supabase";
 import { AuthScreen, NewPasswordScreen, ImportModal } from "./Account";
+import { useExtensionSnapshot, mergeDiary, isNewer } from "./extensionBridge";
 
 /* =====================================================================
    Abifunktsioonid
@@ -744,6 +745,29 @@ function FullScreenMessage({ children }) {
   return <div className="flex min-h-full items-center justify-center bg-[#FDFBF7] px-4 text-center font-['Figtree',system-ui,sans-serif] text-stone-500">{children}</div>;
 }
 
+function Toast({ text }) {
+  if (!text) return null;
+  return (
+    <div role="status" className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top,0px)+12px)] z-[60] flex justify-center px-4">
+      <span className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2 text-[13px] font-semibold text-[#FDFBF7] shadow-lg">
+        <CheckCircle2 size={15} aria-hidden="true" />
+        {text}
+      </span>
+    </div>
+  );
+}
+
+function useToast() {
+  const [text, setText] = useState("");
+  const timer = useRef(null);
+  function show(t) {
+    setText(t);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setText(""), 4000);
+  }
+  return [text, show];
+}
+
 const EMPTY_DIARY = { generatedAt: null, lessons: [], messages: [] };
 const newNote = (n) => ({ ...n, id: `${n.date}-${n.subject}-${Date.now()}` });
 
@@ -761,12 +785,24 @@ function LocalApp() {
   const [data, setData] = useState(MOCK_DATA);
   const [saved, setSaved] = useState(loadSaved);
   const [importOpen, setImportOpen] = useState(false);
+  const { installed, snapshot, error: syncError } = useExtensionSnapshot();
+  const [toast, showToast] = useToast();
+  useEffect(() => {
+    if (syncError) showToast(syncError);
+  }, [syncError]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Laiendus tõi uue päeviku: võtame selle kasutusele.
+  useEffect(() => {
+    if (!snapshot || !isNewer(snapshot, data)) return;
+    setData((d) => mergeDiary(d.generatedAt ? d : null, snapshot));
+    showToast(`Uuendatud e-päevikust · ${snapshot.lessons.length} tundi`);
+  }, [snapshot]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Proovime lugeda Pythoni skripti loodud faili. Kui seda pole, jäävad näidisandmed.
   useEffect(() => {
     fetch("./stuudium_data.json", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((json) => json && Array.isArray(json.lessons) && setData({ messages: [], ...json }))
+      .then((json) => json && Array.isArray(json.lessons) && setData((d) => (isNewer(json, d) ? { messages: [], ...json } : d)))
       .catch(() => {});
   }, []);
 
@@ -784,7 +820,14 @@ function LocalApp() {
         onDeleteNote={(id) => update(saved.filter((n) => n.id !== id))}
         onImport={() => setImportOpen(true)}
       />
-      {importOpen && <ImportModal onClose={() => setImportOpen(false)} onImported={async (d) => setData(d)} />}
+      {importOpen && (
+        <ImportModal
+          extensionInstalled={installed}
+          onClose={() => setImportOpen(false)}
+          onImported={async (d) => setData((old) => mergeDiary(old.generatedAt ? old : null, d))}
+        />
+      )}
+      <Toast text={toast} />
     </>
   );
 }
@@ -798,6 +841,11 @@ function CloudApp() {
   const [loadError, setLoadError] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const [demoSaved, setDemoSaved] = useState([]);
+  const { installed, snapshot, error: syncError } = useExtensionSnapshot();
+  const [toast, showToast] = useToast();
+  useEffect(() => {
+    if (syncError) showToast(syncError);
+  }, [syncError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -825,6 +873,17 @@ function CloudApp() {
       })
       .catch((e) => setLoadError(e.message || "Andmete laadimine ebaõnnestus."));
   }, [userId]);
+
+  // Laiendus tõi uue päeviku: liidame olemasolevaga ja salvestame kontole.
+  useEffect(() => {
+    if (!userId || !data || !snapshot || !isNewer(snapshot, data)) return;
+    const merged = mergeDiary(data, snapshot);
+    setData(merged);
+    setImportOpen(false);
+    saveDiary(userId, merged)
+      .then(() => showToast(`Uuendatud e-päevikust · ${snapshot.lessons.length} tundi`))
+      .catch(() => showToast("Salvestamine ebaõnnestus. Proovi lehte värskendada."));
+  }, [userId, data, snapshot]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (session === undefined) return <FullScreenMessage>Laen…</FullScreenMessage>;
   if (recovery) return <NewPasswordScreen onDone={() => setRecovery(false)} />;
@@ -878,13 +937,16 @@ function CloudApp() {
       />
       {importOpen && (
         <ImportModal
+          extensionInstalled={installed}
           onClose={() => setImportOpen(false)}
           onImported={async (d) => {
-            await saveDiary(userId, d);
-            setData(d);
+            const merged = mergeDiary(data, d);
+            await saveDiary(userId, merged);
+            setData(merged);
           }}
         />
       )}
+      <Toast text={toast} />
     </>
   );
 }
