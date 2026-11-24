@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { BookOpen, MessageSquare, Sparkles, ChevronDown, ChevronUp, FileText, ArrowLeft, X, ImagePlus, ExternalLink, CheckCircle2, Award, AlertCircle, Clock, ClipboardCopy, Loader2, CalendarDays, Megaphone, Info, BookMarked, Trash2, RefreshCw, LogIn, LogOut } from "lucide-react";
+import { BookOpen, MessageSquare, Sparkles, ChevronDown, ChevronUp, FileText, ArrowLeft, X, ImagePlus, ExternalLink, CheckCircle2, Award, AlertCircle, Clock, ClipboardCopy, Loader2, CalendarDays, Megaphone, Info, BookMarked, Trash2, RefreshCw, LogIn, LogOut, Sun, Moon, ClipboardList, ChevronRight, BarChart3 } from "lucide-react";
 import { MOCK_DATA } from "./mockData";
 import { supabase, loadUserData, saveDiary, saveNotes } from "./supabase";
 import { AuthScreen, NewPasswordScreen, ImportModal } from "./Account";
 import { useExtensionSnapshot, mergeDiary, isNewer } from "./extensionBridge";
+import { useTheme } from "./theme";
 
 /* =====================================================================
    Abifunktsioonid
@@ -37,19 +38,19 @@ function getStatusType(lesson) {
 }
 
 const STATUS_STYLES = {
-  present: { cls: "bg-white/70 text-emerald-800 ring-emerald-700/15", Icon: CheckCircle2 },
+  present: { cls: "bg-card/70 text-emerald-800 dark:text-emerald-300 ring-emerald-700/15", Icon: CheckCircle2 },
   grade: { cls: "bg-indigo-600 text-white ring-indigo-700/20", Icon: Award },
-  absent_excused: { cls: "bg-white/70 text-amber-800 ring-amber-700/20", Icon: AlertCircle },
+  absent_excused: { cls: "bg-card/70 text-amber-800 dark:text-amber-300 ring-amber-700/20", Icon: AlertCircle },
   absent_unexcused: { cls: "bg-rose-600 text-white ring-rose-700/20", Icon: AlertCircle },
-  late: { cls: "bg-white/70 text-orange-800 ring-orange-700/20", Icon: Clock },
+  late: { cls: "bg-card/70 text-orange-800 dark:text-orange-300 ring-orange-700/20", Icon: Clock },
 };
 
 // Iga aine saab oma pastelse kaardivärvi. Tundmatu aine saab värvi nime järgi.
 const CARD_PALETTE = [
-  { card: "bg-[#E3F1E4] border-[#C9E3CB]", dot: "bg-[#5E9E66]" }, // roheline
-  { card: "bg-[#E2EEF9] border-[#C7DDF2]", dot: "bg-[#4E86BF]" }, // sinine
-  { card: "bg-[#FBE6EC] border-[#F3CDD8]", dot: "bg-[#C46A86]" }, // roosa
-  { card: "bg-[#FBF1D3] border-[#F1E0A8]", dot: "bg-[#B8922B]" }, // kollane
+  { card: "bg-leaf border-leaf-line", dot: "bg-[#5E9E66]" }, // roheline
+  { card: "bg-pool border-pool-line", dot: "bg-[#4E86BF]" }, // sinine
+  { card: "bg-blush border-blush-line", dot: "bg-[#C46A86]" }, // roosa
+  { card: "bg-butter border-butter-line", dot: "bg-[#B8922B]" }, // kollane
 ];
 const SUBJECT_COLORS = {
   "Lai matemaatika": 0,
@@ -71,9 +72,9 @@ function subjectColor(subject) {
    ===================================================================== */
 
 const MESSAGE_CATEGORIES = {
-  today: { label: "Mõjutab tänast tundi", Icon: AlertCircle, cls: "bg-[#FBE6EC] border-[#F3CDD8]", chip: "bg-rose-600 text-white" },
-  events: { label: "Üritused", Icon: CalendarDays, cls: "bg-[#FBF1D3] border-[#F1E0A8]", chip: "bg-amber-500 text-white" },
-  general: { label: "Üldinfo", Icon: Info, cls: "bg-[#E2EEF9] border-[#C7DDF2]", chip: "bg-sky-600 text-white" },
+  today: { label: "Mõjutab tänast tundi", Icon: AlertCircle, cls: "bg-blush border-blush-line", chip: "bg-rose-600 text-white" },
+  events: { label: "Üritused", Icon: CalendarDays, cls: "bg-butter border-butter-line", chip: "bg-amber-500 text-white" },
+  general: { label: "Üldinfo", Icon: Info, cls: "bg-pool border-pool-line", chip: "bg-sky-600 text-white" },
 };
 
 function classifyMessage(msg, todayIso) {
@@ -203,7 +204,7 @@ function LessonCard({ lesson, onOpenSubject, onOpenNotes, showDate = false }) {
                     href={l.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1.5 text-[13px] font-medium text-stone-800 ring-1 ring-stone-900/10 hover:bg-white"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-card/80 px-2.5 py-1.5 text-[13px] font-medium text-stone-800 ring-1 ring-stone-900/10 hover:bg-card"
                   >
                     <ExternalLink size={13} aria-hidden="true" />
                     {l.label}
@@ -224,7 +225,7 @@ function LessonCard({ lesson, onOpenSubject, onOpenNotes, showDate = false }) {
               setOpen((v) => !v);
             }}
             aria-expanded={open}
-            className="inline-flex items-center gap-1 rounded-lg px-1.5 py-1 -ml-1.5 text-[13px] font-semibold text-stone-700 hover:bg-white/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-800/40"
+            className="inline-flex items-center gap-1 rounded-lg px-1.5 py-1 -ml-1.5 text-[13px] font-semibold text-stone-700 hover:bg-card/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-800/40"
           >
             {open ? <ChevronUp size={15} aria-hidden="true" /> : <ChevronDown size={15} aria-hidden="true" />}
             {open ? "Peida kirjeldus" : "Kuva kirjeldus"}
@@ -238,7 +239,7 @@ function LessonCard({ lesson, onOpenSubject, onOpenNotes, showDate = false }) {
             e.stopPropagation();
             onOpenNotes(lesson);
           }}
-          className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-[12px] font-semibold text-stone-700 ring-1 ring-stone-900/10 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-800/40"
+          className="inline-flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1 text-[12px] font-semibold text-stone-700 ring-1 ring-stone-900/10 hover:bg-card focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-800/40"
         >
           <FileText size={13} aria-hidden="true" />
           Konspekt
@@ -253,7 +254,7 @@ function DayDivider({ iso, isToday }) {
     <div className="flex items-center gap-3 pt-2">
       <h2 className="shrink-0 text-[13px] font-bold uppercase tracking-[0.06em] text-stone-500">
         {formatDayHeading(iso)}
-        {isToday && <span className="ml-2 rounded-full bg-stone-900 px-2 py-0.5 text-[10px] tracking-[0.08em] text-[#FDFBF7]">TÄNA</span>}
+        {isToday && <span className="ml-2 rounded-full bg-stone-900 px-2 py-0.5 text-[10px] tracking-[0.08em] text-paper">TÄNA</span>}
       </h2>
       <div className="h-px flex-1 bg-stone-300" />
     </div>
@@ -279,7 +280,7 @@ function DiaryView({ lessons, todayIso, onOpenSubject, onOpenNotes, onImport }) 
         <h2 className="font-['Bricolage_Grotesque',system-ui,sans-serif] text-lg font-semibold text-stone-800">Päevik on veel tühi</h2>
         <p className="max-w-xs text-[14px] text-stone-500">Lae üles oma Stuudiumi päeviku leht, et siia ilmuksid sinu tunnid, hinded ja puudumised.</p>
         {onImport && (
-          <button type="button" onClick={onImport} className="mt-1 inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[14px] font-semibold text-[#FDFBF7] hover:bg-stone-800">
+          <button type="button" onClick={onImport} className="mt-1 inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[14px] font-semibold text-paper hover:bg-stone-800">
             <RefreshCw size={15} aria-hidden="true" />
             Lae Stuudiumist
           </button>
@@ -313,7 +314,7 @@ function SubjectHistory({ subject, lessons, onBack, onOpenNotes }) {
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-[14px] font-semibold text-stone-800 ring-1 ring-stone-900/10 hover:bg-stone-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-800/40"
+        className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-2 text-[14px] font-semibold text-stone-800 ring-1 ring-stone-900/10 hover:bg-stone-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-800/40"
       >
         <ArrowLeft size={16} aria-hidden="true" />
         Tagasi päevikusse
@@ -328,7 +329,7 @@ function SubjectHistory({ subject, lessons, onBack, onOpenNotes }) {
             ["Hindeid", grades.length],
             ["Puudumisi", absences.length],
           ].map(([k, v]) => (
-            <div key={k} className="rounded-xl bg-white/70 py-2">
+            <div key={k} className="rounded-xl bg-card/70 py-2">
               <dd className="text-xl font-bold tabular-nums text-stone-900">{v}</dd>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-500">{k}</dt>
             </div>
@@ -339,7 +340,7 @@ function SubjectHistory({ subject, lessons, onBack, onOpenNotes }) {
       <ol className="relative space-y-3 border-l-2 border-stone-200 pl-4">
         {items.map((l) => (
           <li key={l.id} className="relative">
-            <span className={`absolute -left-[23px] top-5 h-3 w-3 rounded-full ring-4 ring-[#FDFBF7] ${color.dot}`} aria-hidden="true" />
+            <span className={`absolute -left-[23px] top-5 h-3 w-3 rounded-full ring-4 ring-paper ${color.dot}`} aria-hidden="true" />
             <LessonCard lesson={l} onOpenNotes={onOpenNotes} showDate />
           </li>
         ))}
@@ -367,8 +368,8 @@ function MessagesView({ messages, todayIso }) {
 
   return (
     <div className="space-y-6">
-      <p className="flex items-center gap-2 rounded-xl bg-white px-3 py-2.5 text-[13px] text-stone-600 ring-1 ring-stone-900/5">
-        <Sparkles size={15} className="shrink-0 text-violet-600" aria-hidden="true" />
+      <p className="flex items-center gap-2 rounded-xl bg-card px-3 py-2.5 text-[13px] text-stone-600 ring-1 ring-stone-900/5">
+        <Sparkles size={15} className="shrink-0 text-violet-600 dark:text-violet-300" aria-hidden="true" />
         Teated on sorteeritud selle järgi, kas need puudutavad sinu tänaseid tunde.
       </p>
       {Object.entries(groups).map(([key, items]) => {
@@ -424,7 +425,7 @@ function CheatSheetView({ saved, onDelete }) {
               type="button"
               onClick={() => onDelete(n.id)}
               aria-label={`Kustuta konspekt „${n.title}”`}
-              className="rounded-lg p-1.5 text-stone-500 hover:bg-white/70 hover:text-rose-700"
+              className="rounded-lg p-1.5 text-stone-500 hover:bg-card/70 hover:text-rose-700 dark:hover:text-rose-300"
             >
               <Trash2 size={16} aria-hidden="true" />
             </button>
@@ -452,6 +453,21 @@ function NotesBody({ notes }) {
           </ul>
         </div>
       ))}
+      {notes.links?.length > 0 && (
+        <div>
+          <h4 className="text-[12px] font-bold uppercase tracking-[0.06em] text-stone-500">Materjalid</h4>
+          <ul className="mt-1 flex flex-wrap gap-2">
+            {notes.links.map((l) => (
+              <li key={l.url}>
+                <a href={l.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-card px-2.5 py-1.5 text-[13px] font-medium text-stone-800 ring-1 ring-stone-900/10 hover:bg-stone-50">
+                  <ExternalLink size={13} aria-hidden="true" />
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -500,13 +516,13 @@ function NotesModal({ lesson, onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-stone-900/40 sm:items-center sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="notes-title"
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92%] w-full max-w-lg flex-col rounded-t-3xl bg-[#FDFBF7] shadow-2xl sm:rounded-3xl"
+        className="flex max-h-[92%] w-full max-w-lg flex-col rounded-t-3xl bg-paper shadow-2xl sm:rounded-3xl"
       >
         <header className="flex items-start justify-between gap-3 border-b border-stone-200 px-5 pb-4 pt-5">
           <div className="min-w-0">
@@ -540,7 +556,7 @@ function NotesModal({ lesson, onClose, onSave }) {
               acceptFile(e.dataTransfer.files?.[0]);
             }}
             className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-5 text-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-800/40 ${
-              dragging ? "border-sky-500 bg-[#E2EEF9]" : "border-stone-300 bg-white hover:border-stone-400"
+              dragging ? "border-sky-500 bg-pool" : "border-stone-300 bg-card hover:border-stone-400"
             }`}
           >
             {preview ? (
@@ -559,9 +575,9 @@ function NotesModal({ lesson, onClose, onSave }) {
           </div>
 
           {/* AI sünteesi kast */}
-          <section className="rounded-2xl border border-violet-200 bg-gradient-to-b from-violet-50 to-white p-4">
+          <section className="rounded-2xl border border-violet-200 dark:border-violet-900 bg-gradient-to-b from-violet-50 dark:from-violet-950/40 to-card p-4">
             <div className="flex items-center gap-2">
-              <Sparkles size={16} className="text-violet-600" aria-hidden="true" />
+              <Sparkles size={16} className="text-violet-600 dark:text-violet-300" aria-hidden="true" />
               <h3 className="text-[14px] font-bold text-stone-900">AI süntees</h3>
             </div>
             <p className="mt-1 text-[13px] text-stone-600">
@@ -573,7 +589,7 @@ function NotesModal({ lesson, onClose, onSave }) {
                 type="button"
                 onClick={generate}
                 disabled={loading}
-                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[14px] font-semibold text-[#FDFBF7] hover:bg-stone-800 disabled:opacity-70"
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[14px] font-semibold text-paper hover:bg-stone-800 disabled:opacity-70"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Sparkles size={16} aria-hidden="true" />}
                 {loading ? "Koostan konspekti…" : "Koosta konspekt"}
@@ -591,7 +607,7 @@ function NotesModal({ lesson, onClose, onSave }) {
                       onSave(notes);
                       setSavedMsg("Salvestatud spikrisse");
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 px-3.5 py-2 text-[13px] font-semibold text-[#FDFBF7] hover:bg-stone-800"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 px-3.5 py-2 text-[13px] font-semibold text-paper hover:bg-stone-800"
                   >
                     <BookMarked size={14} aria-hidden="true" />
                     Salvesta spikrisse
@@ -599,7 +615,7 @@ function NotesModal({ lesson, onClose, onSave }) {
                   <button
                     type="button"
                     onClick={copy}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-[13px] font-semibold text-stone-800 ring-1 ring-stone-900/10 hover:bg-stone-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-card px-3.5 py-2 text-[13px] font-semibold text-stone-800 ring-1 ring-stone-900/10 hover:bg-stone-50"
                   >
                     <ClipboardCopy size={14} aria-hidden="true" />
                     Kopeeri
@@ -608,7 +624,7 @@ function NotesModal({ lesson, onClose, onSave }) {
                     Koosta uuesti
                   </button>
                   {savedMsg && (
-                    <span role="status" className="text-[13px] font-semibold text-emerald-700">
+                    <span role="status" className="text-[13px] font-semibold text-emerald-700 dark:text-emerald-300">
                       {savedMsg}
                     </span>
                   )}
@@ -623,8 +639,418 @@ function NotesModal({ lesson, onClose, onSave }) {
   );
 }
 
+/* =====================================================================
+   Tulemas: kodutööd ja kontrolltööd + kontrolltöö kordamiskonspekt
+   ===================================================================== */
+
+function dayDiff(iso, todayIso) {
+  const [a, b] = [iso, todayIso].map((d) => Date.UTC(...d.split("-").map((x, i) => Number(x) - (i === 1 ? 1 : 0))));
+  return Math.round((a - b) / 86400000);
+}
+
+function relativeDay(n) {
+  if (n === 0) return "täna";
+  if (n === 1) return "homme";
+  if (n === -1) return "eile";
+  return n > 1 ? `${n} päeva pärast` : `${-n} päeva tagasi`;
+}
+
+const TEST_WORDS = /kontrolltöö|arvestus|tasemetöö|\btest\b/i;
+
+// Kogub kontrolltööle eelnenud tundide teemad üheks kordamiskonspektiks.
+function buildTestPrep(test, lessons, upcoming = []) {
+  const all = lessons.filter((l) => l.subject === test.subject && l.date < test.date).sort((a, b) => a.date.localeCompare(b.date));
+  // Alustame pärast eelmist kontrolltööd (kui see on näha), muidu viimased 10 tundi.
+  let start = 0;
+  for (let i = all.length - 1; i >= 0; i--) {
+    if (TEST_WORDS.test(`${all[i].topic} ${all[i].details}`)) {
+      start = i + 1;
+      break;
+    }
+  }
+  let used = all.slice(start);
+  if (!used.length) used = all.slice(-10);
+
+  const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+  const topics = uniq(used.map((l) => l.topic).filter((t) => t !== "Teema puudub"));
+  const detailLines = uniq(used.flatMap((l) => (l.details || "").split("\n")).map((s) => s.trim()).filter((s) => s.length > 3));
+  const homework = uniq([
+    ...detailLines.filter((s) => /^kodutöö/i.test(s)),
+    ...upcoming.filter((u) => u.subject === test.subject && u.type === "homework" && u.date <= test.date).map((u) => `${formatShortDate(u.date)}: ${u.content}`),
+  ]);
+  const covered = detailLines.filter((s) => !/^kodutöö/i.test(s)).slice(0, 20);
+  const links = [];
+  const seen = new Set();
+  used.forEach((l) => (l.links || []).forEach((k) => !seen.has(k.url) && seen.add(k.url) && links.push(k)));
+
+  const questions = topics.slice(-6).map((t, i) => (i % 2 === 0 ? `Selgita oma sõnadega: ${t}` : `Too näide või lahenda ülesanne teemal: ${t}`));
+
+  return {
+    title: `Kordamine: ${test.subject} ${test.typeLabel.toLowerCase()}`,
+    subject: test.subject,
+    date: test.date,
+    source: used.length ? `${used.length} tunni teemad (${formatShortDate(used[0].date)}–${formatShortDate(used[used.length - 1].date)})` : "Selle aine tunde pole veel laaditud",
+    sections: [
+      { heading: test.typeLabel, items: [`${formatDayHeading(test.date)}${test.content ? ` · ${test.content}` : ""}`] },
+      ...(topics.length ? [{ heading: "Teemad kordamiseks", items: used.filter((l) => l.topic !== "Teema puudub").map((l) => `${formatShortDate(l.date)} · ${l.topic}`) }] : []),
+      ...(covered.length ? [{ heading: "Tunnis käsitletud", items: covered }] : []),
+      ...(homework.length ? [{ heading: "Kodutööd ja ülesanded", items: homework }] : []),
+      ...(questions.length ? [{ heading: "Kontrolli ennast", items: questions }] : []),
+    ],
+    links,
+  };
+}
+
+function TestPrepModal({ test, lessons, upcoming, onClose, onSave }) {
+  const notes = useMemo(() => buildTestPrep(test, lessons, upcoming), [test, lessons, upcoming]);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="prep-title"
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[92%] w-full max-w-lg flex-col rounded-t-3xl bg-paper shadow-2xl sm:rounded-3xl"
+      >
+        <header className="flex items-start justify-between gap-3 border-b border-stone-200 px-5 pb-4 pt-5">
+          <div className="min-w-0">
+            <p className="text-[12px] font-semibold text-stone-500">
+              {test.subject} · {formatDayHeading(test.date)}
+            </p>
+            <h2 id="prep-title" className="font-['Bricolage_Grotesque',system-ui,sans-serif] text-xl font-bold leading-tight text-stone-900">
+              Kordamiskonspekt
+            </h2>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Sulge" className="rounded-full p-2 text-stone-500 hover:bg-stone-100">
+            <X size={20} aria-hidden="true" />
+          </button>
+        </header>
+        <div className="overflow-y-auto px-5 py-4">
+          <p className="text-[12px] font-semibold text-stone-400">Allikas: {notes.source}</p>
+          <NotesBody notes={notes} />
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                onSave(notes);
+                setMsg("Salvestatud spikrisse");
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 px-3.5 py-2 text-[13px] font-semibold text-paper hover:bg-stone-800"
+            >
+              <BookMarked size={14} aria-hidden="true" />
+              Salvesta spikrisse
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(notesToText(notes));
+                  setMsg("Kopeeritud");
+                } catch {
+                  setMsg("Kopeerimine ebaõnnestus");
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-card px-3.5 py-2 text-[13px] font-semibold text-stone-800 ring-1 ring-stone-900/10 hover:bg-stone-50"
+            >
+              <ClipboardCopy size={14} aria-hidden="true" />
+              Kopeeri
+            </button>
+            {msg && (
+              <span role="status" className="text-[13px] font-semibold text-emerald-700 dark:text-emerald-300">
+                {msg}
+              </span>
+            )}
+          </div>
+          <p className="mt-3 text-[11px] text-stone-400">Koostatud sinu tundide teemadest ja kirjeldustest. Kontrolli õpikust ja vihikust üle.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NextTestBanner({ test, todayIso, onOpen }) {
+  const n = dayDiff(test.date, todayIso);
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-blush-line bg-blush px-4 py-3 text-left hover:shadow-[0_2px_12px_rgba(60,50,30,0.08)]"
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-600 text-white">
+        <ClipboardList size={17} aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[12px] font-bold uppercase tracking-[0.06em] text-rose-800 dark:text-rose-300">
+          {test.typeLabel} {relativeDay(n)}
+        </span>
+        <span className="block truncate font-semibold text-stone-900">
+          {test.subject}
+          {test.content ? ` · ${test.content}` : ""}
+        </span>
+      </span>
+      <ChevronRight size={18} className="shrink-0 text-stone-500" aria-hidden="true" />
+    </button>
+  );
+}
+
+function UpcomingView({ upcoming, todayIso, onPrep, onImport }) {
+  const items = (upcoming || []).filter((u) => u.date >= todayIso);
+  const groups = useMemo(() => {
+    const m = new Map();
+    items.forEach((u) => {
+      if (!m.has(u.date)) m.set(u.date, []);
+      m.get(u.date).push(u);
+    });
+    return [...m.entries()];
+  }, [items]);
+
+  if (!items.length) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-300 px-6 py-14 text-center">
+        <CalendarDays size={28} className="text-stone-400" aria-hidden="true" />
+        <h2 className="font-['Bricolage_Grotesque',system-ui,sans-serif] text-lg font-semibold text-stone-800">Tulevasi töid pole</h2>
+        <p className="max-w-xs text-[14px] text-stone-500">Siia tulevad Stuudiumi kodutööd ja kontrolltööd. Uuenda päevikut, et näha värskeimat seisu.</p>
+        {onImport && (
+          <button type="button" onClick={onImport} className="mt-1 inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[14px] font-semibold text-paper hover:bg-stone-800">
+            <RefreshCw size={15} aria-hidden="true" />
+            Uuenda Stuudiumist
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  const tests = items.filter((u) => u.type === "test");
+
+  return (
+    <div className="space-y-6">
+      <dl className="grid grid-cols-2 gap-2">
+        <div className="rounded-2xl border border-blush-line bg-blush p-3">
+          <dd className="text-2xl font-bold tabular-nums text-stone-900">{tests.length}</dd>
+          <dt className="text-[12px] font-semibold text-stone-600">kontrolltööd tulemas</dt>
+        </div>
+        <div className="rounded-2xl border border-pool-line bg-pool p-3">
+          <dd className="text-2xl font-bold tabular-nums text-stone-900">{items.length - tests.length}</dd>
+          <dt className="text-[12px] font-semibold text-stone-600">kodutööd tulemas</dt>
+        </div>
+      </dl>
+
+      {groups.map(([date, list]) => {
+        const n = dayDiff(date, todayIso);
+        return (
+          <section key={date} className="space-y-3">
+            <div className="flex items-center gap-3">
+              <h2 className="shrink-0 text-[13px] font-bold uppercase tracking-[0.06em] text-stone-500">
+                {formatDayHeading(date)}
+                <span className="ml-2 normal-case tracking-normal text-stone-400">{relativeDay(n)}</span>
+              </h2>
+              <div className="h-px flex-1 bg-stone-300" />
+            </div>
+            {list.map((u) => {
+              const isTest = u.type === "test";
+              return (
+                <article key={u.id} className={`rounded-2xl border p-4 ${isTest ? "border-blush-line bg-blush" : subjectColor(u.subject).card}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 text-[13px] font-semibold text-stone-600">
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${subjectColor(u.subject).dot}`} aria-hidden="true" />
+                        {u.subject}
+                      </div>
+                      <p className="mt-1 whitespace-pre-line text-[15px] leading-snug text-stone-900">{u.content || u.typeLabel}</p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${isTest ? "bg-rose-600 text-white" : "bg-card/70 text-stone-700 ring-1 ring-stone-900/10"}`}>
+                      {u.typeLabel}
+                    </span>
+                  </div>
+                  {isTest && (
+                    <button
+                      type="button"
+                      onClick={() => onPrep(u)}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-[13px] font-semibold text-stone-800 ring-1 ring-stone-900/10 hover:bg-stone-50"
+                    >
+                      <Sparkles size={14} aria-hidden="true" />
+                      Koosta kordamiskonspekt
+                    </button>
+                  )}
+                </article>
+              );
+            })}
+          </section>
+        );
+      })}
+      <p className="text-center text-[12px] text-stone-400">Stuudiumi avaleht ei näita tunniplaani, seega on siin kodutööd ja kontrolltööd.</p>
+    </div>
+  );
+}
+
+/* =====================================================================
+   Ülevaade: puudumised, hilinemised, hinded
+   ===================================================================== */
+
+const marks = (l) => {
+  const s = l.status || "";
+  const absent = /puudus/i.test(s);
+  return { absent, unexcused: absent && !/põhjendatud/i.test(s), late: /hilin/i.test(s) };
+};
+const gradePct = (l) => {
+  const m = l.statusType === "grade" && (l.status || "").match(/(\d+(?:[.,]\d+)?)\s*%/);
+  return m ? Number(m[1].replace(",", ".")) : null;
+};
+
+const FILTERS = [
+  { key: "all", label: "Kõik", test: (m) => m.absent || m.late },
+  { key: "absent", label: "Puudumised", test: (m) => m.absent },
+  { key: "unexcused", label: "Põhjuseta", test: (m) => m.unexcused },
+  { key: "late", label: "Hilinemised", test: (m) => m.late },
+];
+
+function OverviewView({ lessons, absenceSummary, onOpenSubject }) {
+  const [filter, setFilter] = useState("all");
+  const stats = useMemo(() => {
+    let absent = 0, unexcused = 0, late = 0;
+    const bySubject = new Map();
+    lessons.forEach((l) => {
+      const m = marks(l);
+      const g = gradePct(l);
+      if (!bySubject.has(l.subject)) bySubject.set(l.subject, { subject: l.subject, absent: 0, late: 0, grades: [] });
+      const row = bySubject.get(l.subject);
+      if (m.absent) (absent++, row.absent++);
+      if (m.unexcused) unexcused++;
+      if (m.late) (late++, row.late++);
+      if (g !== null) row.grades.push(g);
+    });
+    return { absent, unexcused, late, subjects: [...bySubject.values()].sort((a, b) => a.subject.localeCompare(b.subject, "et")) };
+  }, [lessons]);
+
+  const fromStuudium = Boolean(absenceSummary);
+  const tiles = [
+    { label: "Puudumisi", value: fromStuudium ? absenceSummary.total : stats.absent, cls: "border-butter-line bg-butter" },
+    { label: "Põhjuseta", value: fromStuudium && absenceSummary.unexcused != null ? absenceSummary.unexcused : stats.unexcused, cls: "border-blush-line bg-blush" },
+    { label: "Hilinemisi", value: stats.late, cls: "border-pool-line bg-pool" },
+  ];
+  const active = FILTERS.find((f) => f.key === filter);
+  const list = [...lessons].filter((l) => active.test(marks(l))).sort((a, b) => b.date.localeCompare(a.date));
+  const graded = stats.subjects.filter((s) => s.grades.length);
+
+  return (
+    <div className="space-y-7">
+      <section className="space-y-2">
+        <dl className="grid grid-cols-3 gap-2">
+          {tiles.map((t) => (
+            <div key={t.label} className={`rounded-2xl border p-3 ${t.cls}`}>
+              <dd className="text-2xl font-bold tabular-nums text-stone-900">{t.value}</dd>
+              <dt className="text-[12px] font-semibold text-stone-600">{t.label}</dt>
+            </div>
+          ))}
+        </dl>
+        <p className="text-[12px] text-stone-400">
+          {fromStuudium ? "Puudumised: kogu perioodi kokkuvõte Stuudiumist. Hilinemised: laaditud tundidest." : "Arvestatud laaditud tundide põhjal."}
+        </p>
+      </section>
+
+      {graded.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-[13px] font-bold uppercase tracking-[0.06em] text-stone-500">Hinded ainete kaupa</h2>
+          <ul className="space-y-2">
+            {graded.map((s) => {
+              const avg = Math.round(s.grades.reduce((a, b) => a + b, 0) / s.grades.length);
+              return (
+                <li key={s.subject}>
+                  <button type="button" onClick={() => onOpenSubject(s.subject)} className="w-full rounded-xl bg-card px-3 py-2.5 text-left ring-1 ring-stone-900/5 hover:ring-stone-900/15">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-[14px] font-semibold text-stone-800">{s.subject}</span>
+                      <span className="shrink-0 text-[14px] font-bold tabular-nums text-stone-900">
+                        {avg}% <span className="text-[12px] font-medium text-stone-400">· {s.grades.length} hinnet</span>
+                      </span>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-stone-100">
+                      <div className={`h-full rounded-full ${avg >= 75 ? "bg-emerald-500" : avg >= 50 ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${avg}%` }} />
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      <section className="space-y-3">
+        <h2 className="text-[13px] font-bold uppercase tracking-[0.06em] text-stone-500">Puudumised ja hilinemised ainete kaupa</h2>
+        <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-stone-900/5">
+          <table className="w-full text-[14px]">
+            <thead>
+              <tr className="text-left text-[12px] font-semibold text-stone-500">
+                <th className="px-3 py-2 font-semibold">Aine</th>
+                <th className="px-3 py-2 text-right font-semibold">Puudus</th>
+                <th className="px-3 py-2 text-right font-semibold">Hilines</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.subjects
+                .filter((s) => s.absent || s.late)
+                .sort((a, b) => b.absent + b.late - (a.absent + a.late))
+                .map((s) => (
+                  <tr key={s.subject} className="border-t border-stone-100">
+                    <td className="px-3 py-2 text-stone-800">{s.subject}</td>
+                    <td className="px-3 py-2 text-right font-semibold tabular-nums text-stone-900">{s.absent || "–"}</td>
+                    <td className="px-3 py-2 text-right font-semibold tabular-nums text-stone-900">{s.late || "–"}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-[13px] font-bold uppercase tracking-[0.06em] text-stone-500">Kõik märked</h2>
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Märgete filter">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              role="tab"
+              aria-selected={filter === f.key}
+              onClick={() => setFilter(f.key)}
+              className={`rounded-full px-3 py-1.5 text-[13px] font-semibold ring-1 ${filter === f.key ? "bg-stone-900 text-paper ring-stone-900" : "bg-card text-stone-600 ring-stone-900/10 hover:text-stone-900"}`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        {list.length ? (
+          <ul className="divide-y divide-stone-100 rounded-xl bg-card ring-1 ring-stone-900/5">
+            {list.map((l) => (
+              <li key={l.id}>
+                <button type="button" onClick={() => onOpenSubject(l.subject)} className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-stone-50">
+                  <span className="min-w-0">
+                    <span className="block truncate text-[14px] font-semibold text-stone-800">{l.subject}</span>
+                    <span className="block text-[12px] tabular-nums text-stone-500">{formatDayHeading(l.date)}</span>
+                  </span>
+                  <StatusPill lesson={l} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="rounded-xl bg-card px-3 py-6 text-center text-[14px] text-stone-500 ring-1 ring-stone-900/5">Selliseid märkeid pole.</p>
+        )}
+      </section>
+    </div>
+  );
+}
+
 const TABS = [
   { key: "diary", label: "Päevik", Icon: BookOpen },
+  { key: "upcoming", label: "Tulemas", Icon: CalendarDays },
+  { key: "overview", label: "Ülevaade", Icon: BarChart3 },
   { key: "messages", label: "Sõnumid", Icon: MessageSquare },
   { key: "cheatsheet", label: "Spikker", Icon: BookMarked },
 ];
@@ -635,6 +1061,8 @@ const TABS = [
 
 function Diary({ data, saved, onSaveNote, onDeleteNote, onImport, account }) {
   const [tab, setTab] = useState("diary");
+  const [prepTest, setPrepTest] = useState(null);
+  const [theme, toggleTheme] = useTheme();
   const [subject, setSubject] = useState(null);
   const [notesLesson, setNotesLesson] = useState(null);
 
@@ -645,6 +1073,7 @@ function Diary({ data, saved, onSaveNote, onDeleteNote, onImport, account }) {
   }, [data]);
 
   const todayAlerts = data.messages.filter((m) => classifyMessage(m, todayIso) === "today").length;
+  const nextTest = (data.upcoming || []).find((u) => u.type === "test" && u.date >= todayIso && dayDiff(u.date, todayIso) <= 7);
 
   function switchTab(key) {
     setTab(key);
@@ -654,11 +1083,11 @@ function Diary({ data, saved, onSaveNote, onDeleteNote, onImport, account }) {
 
   const title = subject ? subject : TABS.find((t) => t.key === tab).label;
   const iconBtn =
-    "inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-stone-700 ring-1 ring-stone-900/10 hover:bg-stone-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-800/40";
+    "inline-flex h-9 w-9 items-center justify-center rounded-full bg-card text-stone-700 ring-1 ring-stone-900/10 hover:bg-stone-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-800/40";
 
   return (
-    <div className="min-h-full bg-[#FDFBF7] font-['Figtree',system-ui,sans-serif] text-stone-900">
-      <header className="sticky top-[env(safe-area-inset-top,0px)] z-30 border-b border-stone-200/70 bg-[#FDFBF7]/95 backdrop-blur">
+    <div className="min-h-full bg-paper font-['Figtree',system-ui,sans-serif] text-stone-900">
+      <header className="sticky top-[env(safe-area-inset-top,0px)] z-30 border-b border-stone-200/70 bg-paper/95 backdrop-blur">
         <div className="mx-auto flex max-w-xl items-end justify-between gap-3 px-4 pb-3 pt-4">
           <div className="min-w-0">
             <p className="truncate text-[12px] font-semibold uppercase tracking-[0.08em] text-stone-400">
@@ -671,13 +1100,16 @@ function Diary({ data, saved, onSaveNote, onDeleteNote, onImport, account }) {
               <button
                 type="button"
                 onClick={() => switchTab("messages")}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#FBE6EC] px-3 py-1.5 text-[12px] font-semibold text-rose-800 ring-1 ring-rose-200"
+                className="inline-flex items-center gap-1.5 rounded-full bg-blush px-3 py-1.5 text-[12px] font-semibold text-rose-800 dark:text-rose-300 ring-1 ring-rose-200 dark:ring-rose-900"
               >
                 <Megaphone size={14} aria-hidden="true" />
                 {todayAlerts}
                 <span className="sr-only">teadet täna</span>
               </button>
             )}
+            <button type="button" onClick={toggleTheme} className={iconBtn} aria-label={theme === "dark" ? "Hele teema" : "Tume teema"} title={theme === "dark" ? "Hele teema" : "Tume teema"}>
+              {theme === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+            </button>
             {onImport && (
               <button type="button" onClick={onImport} className={iconBtn} aria-label="Uuenda Stuudiumist" title="Uuenda Stuudiumist">
                 <RefreshCw size={16} aria-hidden="true" />
@@ -693,6 +1125,7 @@ function Diary({ data, saved, onSaveNote, onDeleteNote, onImport, account }) {
       </header>
 
       <main className="mx-auto max-w-xl px-4 pb-28 pt-4">
+        {tab === "diary" && !subject && nextTest && <NextTestBanner test={nextTest} todayIso={todayIso} onOpen={() => switchTab("upcoming")} />}
         {tab === "diary" &&
           (subject ? (
             <SubjectHistory subject={subject} lessons={data.lessons} onBack={() => setSubject(null)} onOpenNotes={setNotesLesson} />
@@ -708,13 +1141,25 @@ function Diary({ data, saved, onSaveNote, onDeleteNote, onImport, account }) {
               onOpenNotes={setNotesLesson}
             />
           ))}
+        {tab === "upcoming" && <UpcomingView upcoming={data.upcoming} todayIso={todayIso} onPrep={setPrepTest} onImport={onImport} />}
+        {tab === "overview" && (
+          <OverviewView
+            lessons={data.lessons}
+            absenceSummary={data.absenceSummary}
+            onOpenSubject={(s) => {
+              setTab("diary");
+              setSubject(s);
+              window.scrollTo({ top: 0 });
+            }}
+          />
+        )}
         {tab === "messages" && <MessagesView messages={data.messages} todayIso={todayIso} />}
         {tab === "cheatsheet" && <CheatSheetView saved={saved} onDelete={onDeleteNote} />}
       </main>
 
       {/* Alumine navigeerimisriba */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur" aria-label="Põhimenüü">
-        <ul className="mx-auto grid max-w-xl grid-cols-3">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-card/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur" aria-label="Põhimenüü">
+        <ul className="mx-auto grid max-w-xl grid-cols-5">
           {TABS.map(({ key, label, Icon }) => {
             const active = tab === key;
             return (
@@ -723,9 +1168,9 @@ function Diary({ data, saved, onSaveNote, onDeleteNote, onImport, account }) {
                   type="button"
                   onClick={() => switchTab(key)}
                   aria-current={active ? "page" : undefined}
-                  className={`flex w-full flex-col items-center gap-1 py-2.5 text-[12px] font-semibold focus:outline-none focus-visible:bg-stone-100 ${active ? "text-stone-900" : "text-stone-400 hover:text-stone-600"}`}
+                  className={`flex w-full flex-col items-center gap-1 py-2.5 text-[11px] font-semibold focus:outline-none focus-visible:bg-stone-100 ${active ? "text-stone-900" : "text-stone-400 hover:text-stone-600"}`}
                 >
-                  <span className={`flex h-8 w-14 items-center justify-center rounded-full transition ${active ? "bg-[#E3F1E4]" : ""}`}>
+                  <span className={`flex h-8 w-12 items-center justify-center rounded-full transition ${active ? "bg-leaf" : ""}`}>
                     <Icon size={20} strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
                   </span>
                   {label}
@@ -736,20 +1181,21 @@ function Diary({ data, saved, onSaveNote, onDeleteNote, onImport, account }) {
         </ul>
       </nav>
 
+      {prepTest && <TestPrepModal test={prepTest} lessons={data.lessons} upcoming={data.upcoming} onClose={() => setPrepTest(null)} onSave={onSaveNote} />}
       {notesLesson && <NotesModal lesson={notesLesson} onClose={() => setNotesLesson(null)} onSave={onSaveNote} />}
     </div>
   );
 }
 
 function FullScreenMessage({ children }) {
-  return <div className="flex min-h-full items-center justify-center bg-[#FDFBF7] px-4 text-center font-['Figtree',system-ui,sans-serif] text-stone-500">{children}</div>;
+  return <div className="flex min-h-full items-center justify-center bg-paper px-4 text-center font-['Figtree',system-ui,sans-serif] text-stone-500">{children}</div>;
 }
 
 function Toast({ text }) {
   if (!text) return null;
   return (
     <div role="status" className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top,0px)+12px)] z-[60] flex justify-center px-4">
-      <span className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2 text-[13px] font-semibold text-[#FDFBF7] shadow-lg">
+      <span className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2 text-[13px] font-semibold text-paper shadow-lg">
         <CheckCircle2 size={15} aria-hidden="true" />
         {text}
       </span>
