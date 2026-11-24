@@ -111,17 +111,26 @@ export function parseStuudiumHtml(html, { today = new Date(), savedAt = new Date
   const origin = html.match(/https:\/\/[a-z0-9-]+\.ope\.ee/i)?.[0] || "";
   const lessons = [];
   const events = [];
+  const seenIds = new Set();
+  const seenEvents = new Set();
 
   doc.querySelectorAll(SEL.day).forEach((seg) => {
     const date = parseDay(seg.querySelector(SEL.dayHeading)?.textContent, today);
     if (!date) return;
     seg.querySelectorAll(SEL.event).forEach((e) => {
       const ev = parseEvent(e, today);
-      if (ev) events.push(ev);
+      const k = ev && `${ev.subject}|${ev.date}|${ev.status}`;
+      if (ev && !seenEvents.has(k)) {
+        seenEvents.add(k);
+        events.push(ev);
+      }
     });
     seg.querySelectorAll(SEL.lesson).forEach((row, idx) => {
       const subj = row.querySelector(SEL.lessonSubject);
       if (!subj) return;
+      const sid = row.getAttribute("data-ds-lesson");
+      if (sid && seenIds.has(sid)) return; // sama tund mitu korda lehel
+      if (sid) seenIds.add(sid);
       const notesEl = row.querySelector(SEL.lessonNotes);
       const hwEl = row.querySelector(SEL.lessonHomework);
       const [topic, details] = splitTopic(cleanText(notesEl));
