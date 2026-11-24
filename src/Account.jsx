@@ -1,7 +1,8 @@
-import React, { useState, useRef } from "react";
-import { BookOpen, Loader2, Upload, X, CheckCircle2 } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { BookOpen, Loader2, Upload, X, CheckCircle2, Bookmark, ClipboardCopy } from "lucide-react";
 import { supabase } from "./supabase";
 import { parseStuudiumHtml } from "./stuudiumParser";
+import { bookmarkletCode } from "./extensionBridge";
 
 const DISPLAY = "font-['Bricolage_Grotesque',system-ui,sans-serif]";
 
@@ -168,7 +169,133 @@ export function NewPasswordScreen({ onDone }) {
    Stuudiumi päeviku üleslaadimine
    ===================================================================== */
 
-export function ImportModal({ onClose, onImported }) {
+const DEVICES = {
+  iphone: {
+    label: "iPhone",
+    steps: [
+      "Vajuta all nuppu „Kopeeri kood”.",
+      "Ava Safaris ükskõik milline leht, vajuta Jaga-nuppu (□↑) → „Lisa järjehoidja” → nimeks Koolipäevik → Salvesta.",
+      "Ava järjehoidjad (📖) → Muuda → vali Koolipäevik → kustuta aadress ja kleebi kood asemele → Valmis.",
+      "Ava Safaris Stuudium, logi sisse ja vajuta järjehoidjates Koolipäevik.",
+    ],
+  },
+  android: {
+    label: "Android",
+    steps: [
+      "Vajuta all nuppu „Kopeeri kood”.",
+      "Chrome'is vajuta ⋮ → ☆ (lisa järjehoidja), siis „Muuda”: nimeks Koolipäevik ja aadressiks kleebi kood.",
+      "Ava Chrome'is Stuudium ja logi sisse.",
+      "Kirjuta aadressiribale Koolipäevik ja vali nimekirjast järjehoidja (tähe-ikooniga).",
+    ],
+  },
+  computer: {
+    label: "Arvuti",
+    steps: [
+      "Näita järjehoidjate riba: Cmd + Shift + B (Windowsis Ctrl + Shift + B).",
+      "Lohista all olev nupp „Koolipäevik” järjehoidjate ribale.",
+      "Ava Stuudium, logi sisse ja vajuta ribal Koolipäevik.",
+    ],
+  },
+};
+
+function guessDevice() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/i.test(ua)) return "iphone";
+  if (/Android/i.test(ua)) return "android";
+  return "computer";
+}
+
+function BookmarkletSection() {
+  const [device, setDevice] = useState(guessDevice);
+  const [copied, setCopied] = useState("");
+  const linkRef = useRef(null);
+  const code = bookmarkletCode(window.location.origin + window.location.pathname);
+
+  // React ei luba javascript:-linke otse renderdada, seega paneme aadressi käsitsi.
+  useEffect(() => {
+    linkRef.current?.setAttribute("href", code);
+  }, [code, device]);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied("Kood kopeeritud");
+    } catch {
+      setCopied("Kopeerimine ebaõnnestus. Vali kood allolevast kastist käsitsi.");
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-2xl border border-stone-200 bg-white p-4">
+      <p className="flex items-center gap-2 text-[14px] font-bold text-stone-900">
+        <Bookmark size={16} aria-hidden="true" />
+        Järjehoidja „Koolipäevik” (soovitatud)
+      </p>
+      <p className="mt-1 text-[13px] text-stone-600">
+        Seadista üks kord. Edaspidi ava Stuudium, vajuta järjehoidjat ja päevik uueneb. Töötab telefonis ja arvutis.
+      </p>
+
+      <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-stone-100 p-1" role="tablist" aria-label="Seade">
+        {Object.entries(DEVICES).map(([key, d]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={device === key}
+            onClick={() => setDevice(key)}
+            className={`rounded-lg py-1.5 text-[13px] font-semibold ${device === key ? "bg-white text-stone-900 shadow-sm" : "text-stone-500"}`}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
+
+      <ol className="mt-3 space-y-2 text-[13px] text-stone-700">
+        {DEVICES[device].steps.map((t, i) => (
+          <li key={i} className="flex gap-2.5">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E3F1E4] text-[11px] font-bold tabular-nums text-[#3E7A47]">{i + 1}</span>
+            <span>{t}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {device === "computer" ? (
+          <a
+            ref={linkRef}
+            onClick={(e) => e.preventDefault()}
+            className="inline-flex cursor-grab items-center gap-2 rounded-xl bg-[#E3F1E4] px-4 py-2.5 text-[14px] font-semibold text-[#24502b] ring-1 ring-[#C9E3CB]"
+            title="Lohista see järjehoidjate ribale"
+          >
+            <Bookmark size={15} aria-hidden="true" />
+            Koolipäevik
+          </a>
+        ) : null}
+        <button
+          type="button"
+          onClick={copy}
+          className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[14px] font-semibold text-[#FDFBF7] hover:bg-stone-800"
+        >
+          <ClipboardCopy size={15} aria-hidden="true" />
+          Kopeeri kood
+        </button>
+      </div>
+      {copied && <p role="status" className="mt-2 text-[13px] font-semibold text-emerald-700">{copied}</p>}
+      <details className="mt-3">
+        <summary className="cursor-pointer text-[12px] font-semibold text-stone-500">Näita koodi</summary>
+        <textarea
+          id="bookmarklet-code"
+          readOnly
+          value={code}
+          onFocus={(e) => e.target.select()}
+          className="mt-2 h-20 w-full rounded-lg border border-stone-200 bg-stone-50 p-2 font-mono text-[11px] text-stone-600"
+        />
+      </details>
+    </div>
+  );
+}
+
+export function ImportModal({ onClose, onImported, extensionInstalled = false }) {
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -215,7 +342,10 @@ export function ImportModal({ onClose, onImported }) {
           </button>
         </div>
 
-        <ol className="mt-3 space-y-2 text-[14px] text-stone-700">
+        <BookmarkletSection />
+
+        <h3 className="mt-5 text-[12px] font-bold uppercase tracking-[0.06em] text-stone-500">Või lae fail käsitsi</h3>
+        <ol className="mt-2 space-y-2 text-[14px] text-stone-700">
           {[
             "Ava arvutis Stuudium ja logi sisse. Avaleht, kus on näha päevade kaupa tunnid, ongi päevik.",
             "Vajuta Cmd + S (Windowsis Ctrl + S) ja vali „Webpage, Complete”.",
