@@ -22,3 +22,12 @@ create policy "Oma andmete kustutamine" on public.user_data for delete using (au
 
 -- Õigused sisselogitud kasutajatele (reeglid ülal piiravad need ainult oma reale)
 grant select, insert, update, delete on public.user_data to authenticated;
+
+-- AI-konspektide kasutuse arvestus (päevane piirang). Ligi pääseb ainult server (Edge Function).
+create table if not exists public.ai_usage (
+  id         bigserial primary key,
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+create index if not exists ai_usage_user_time on public.ai_usage (user_id, created_at);
+alter table public.ai_usage enable row level security;
