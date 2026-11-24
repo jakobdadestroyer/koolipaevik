@@ -53,17 +53,17 @@ export function AuthScreen({ onDemo }) {
   const titles = { login: "Logi sisse", signup: "Loo konto", reset: "Parooli taastamine" };
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-[#FDFBF7] px-4 py-10 font-['Figtree',system-ui,sans-serif] text-stone-900">
+    <div className="flex min-h-full items-center justify-center bg-paper px-4 py-10 font-['Figtree',system-ui,sans-serif] text-stone-900">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-2 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E3F1E4]">
-            <BookOpen size={26} className="text-[#3E7A47]" aria-hidden="true" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-leaf">
+            <BookOpen size={26} className="text-leaf-ink" aria-hidden="true" />
           </div>
           <h1 className={`${DISPLAY} text-3xl font-bold tracking-tight`}>Koolipäevik</h1>
           <p className="text-[14px] text-stone-500">Sinu Stuudiumi tunnid, hinded ja konspektid ühes kohas.</p>
         </div>
 
-        <form onSubmit={submit} className="space-y-3 rounded-3xl border border-stone-200 bg-white p-5">
+        <form onSubmit={submit} className="space-y-3 rounded-3xl border border-stone-200 bg-card p-5">
           <h2 className={`${DISPLAY} text-lg font-semibold`}>{titles[mode]}</h2>
           <label className="block space-y-1">
             <span className="text-[13px] font-semibold text-stone-600">E-post</span>
@@ -74,7 +74,7 @@ export function AuthScreen({ onDemo }) {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-stone-300 bg-[#FDFBF7] px-3 py-2.5 text-[15px] outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-800/10"
+              className="w-full rounded-xl border border-stone-300 bg-paper px-3 py-2.5 text-[15px] outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-800/10"
             />
           </label>
           {mode !== "reset" && (
@@ -88,19 +88,19 @@ export function AuthScreen({ onDemo }) {
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-stone-300 bg-[#FDFBF7] px-3 py-2.5 text-[15px] outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-800/10"
+                className="w-full rounded-xl border border-stone-300 bg-paper px-3 py-2.5 text-[15px] outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-800/10"
               />
               {mode === "signup" && <span className="text-[12px] text-stone-400">Vähemalt 8 märki. Ära kasuta oma Stuudiumi parooli.</span>}
             </label>
           )}
 
-          {error && <p role="alert" className="rounded-xl bg-[#FBE6EC] px-3 py-2 text-[13px] font-medium text-rose-800">{error}</p>}
-          {info && <p role="status" className="rounded-xl bg-[#E3F1E4] px-3 py-2 text-[13px] font-medium text-emerald-800">{info}</p>}
+          {error && <p role="alert" className="rounded-xl bg-blush px-3 py-2 text-[13px] font-medium text-rose-800 dark:text-rose-300">{error}</p>}
+          {info && <p role="status" className="rounded-xl bg-leaf px-3 py-2 text-[13px] font-medium text-emerald-800 dark:text-emerald-300">{info}</p>}
 
           <button
             type="submit"
             disabled={busy}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[15px] font-semibold text-[#FDFBF7] hover:bg-stone-800 disabled:opacity-70"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[15px] font-semibold text-paper hover:bg-stone-800 disabled:opacity-70"
           >
             {busy && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
             {mode === "login" ? "Logi sisse" : mode === "signup" ? "Loo konto" : "Saada link"}
@@ -143,8 +143,8 @@ export function NewPasswordScreen({ onDone }) {
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-[#FDFBF7] px-4 py-10 font-['Figtree',system-ui,sans-serif]">
-      <form onSubmit={submit} className="w-full max-w-sm space-y-3 rounded-3xl border border-stone-200 bg-white p-5">
+    <div className="flex min-h-full items-center justify-center bg-paper px-4 py-10 font-['Figtree',system-ui,sans-serif]">
+      <form onSubmit={submit} className="w-full max-w-sm space-y-3 rounded-3xl border border-stone-200 bg-card p-5">
         <h2 className={`${DISPLAY} text-lg font-semibold`}>Määra uus parool</h2>
         <input
           id="new-password"
@@ -154,10 +154,10 @@ export function NewPasswordScreen({ onDone }) {
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-xl border border-stone-300 bg-[#FDFBF7] px-3 py-2.5 text-[15px] outline-none focus:border-stone-500"
+          className="w-full rounded-xl border border-stone-300 bg-paper px-3 py-2.5 text-[15px] outline-none focus:border-stone-500"
         />
-        {error && <p role="alert" className="text-[13px] text-rose-700">{error}</p>}
-        <button type="submit" disabled={busy} className="w-full rounded-xl bg-stone-900 px-4 py-2.5 font-semibold text-[#FDFBF7] disabled:opacity-70">
+        {error && <p role="alert" className="text-[13px] text-rose-700 dark:text-rose-300">{error}</p>}
+        <button type="submit" disabled={busy} className="w-full rounded-xl bg-stone-900 px-4 py-2.5 font-semibold text-paper disabled:opacity-70">
           Salvesta parool
         </button>
       </form>
@@ -226,7 +226,7 @@ function BookmarkletSection() {
   }
 
   return (
-    <div className="mt-3 rounded-2xl border border-stone-200 bg-white p-4">
+    <div className="mt-3 rounded-2xl border border-stone-200 bg-card p-4">
       <p className="flex items-center gap-2 text-[14px] font-bold text-stone-900">
         <Bookmark size={16} aria-hidden="true" />
         Järjehoidja „Koolipäevik” (soovitatud)
@@ -243,7 +243,7 @@ function BookmarkletSection() {
             role="tab"
             aria-selected={device === key}
             onClick={() => setDevice(key)}
-            className={`rounded-lg py-1.5 text-[13px] font-semibold ${device === key ? "bg-white text-stone-900 shadow-sm" : "text-stone-500"}`}
+            className={`rounded-lg py-1.5 text-[13px] font-semibold ${device === key ? "bg-card text-stone-900 shadow-sm" : "text-stone-500"}`}
           >
             {d.label}
           </button>
@@ -253,7 +253,7 @@ function BookmarkletSection() {
       <ol className="mt-3 space-y-2 text-[13px] text-stone-700">
         {DEVICES[device].steps.map((t, i) => (
           <li key={i} className="flex gap-2.5">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E3F1E4] text-[11px] font-bold tabular-nums text-[#3E7A47]">{i + 1}</span>
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-leaf text-[11px] font-bold tabular-nums text-leaf-ink">{i + 1}</span>
             <span>{t}</span>
           </li>
         ))}
@@ -264,7 +264,7 @@ function BookmarkletSection() {
           <a
             ref={linkRef}
             onClick={(e) => e.preventDefault()}
-            className="inline-flex cursor-grab items-center gap-2 rounded-xl bg-[#E3F1E4] px-4 py-2.5 text-[14px] font-semibold text-[#24502b] ring-1 ring-[#C9E3CB]"
+            className="inline-flex cursor-grab items-center gap-2 rounded-xl bg-leaf px-4 py-2.5 text-[14px] font-semibold text-leaf-deep ring-1 ring-leaf-line"
             title="Lohista see järjehoidjate ribale"
           >
             <Bookmark size={15} aria-hidden="true" />
@@ -274,13 +274,13 @@ function BookmarkletSection() {
         <button
           type="button"
           onClick={copy}
-          className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[14px] font-semibold text-[#FDFBF7] hover:bg-stone-800"
+          className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[14px] font-semibold text-paper hover:bg-stone-800"
         >
           <ClipboardCopy size={15} aria-hidden="true" />
           Kopeeri kood
         </button>
       </div>
-      {copied && <p role="status" className="mt-2 text-[13px] font-semibold text-emerald-700">{copied}</p>}
+      {copied && <p role="status" className="mt-2 text-[13px] font-semibold text-emerald-700 dark:text-emerald-300">{copied}</p>}
       <details className="mt-3">
         <summary className="cursor-pointer text-[12px] font-semibold text-stone-500">Näita koodi</summary>
         <textarea
@@ -327,13 +327,13 @@ export function ImportModal({ onClose, onImported, extensionInstalled = false })
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-stone-900/40 sm:items-center sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="import-title"
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92%] w-full max-w-lg flex-col overflow-y-auto rounded-t-3xl bg-[#FDFBF7] p-5 shadow-2xl sm:rounded-3xl"
+        className="flex max-h-[92%] w-full max-w-lg flex-col overflow-y-auto rounded-t-3xl bg-paper p-5 shadow-2xl sm:rounded-3xl"
       >
         <div className="flex items-start justify-between gap-3">
           <h2 id="import-title" className={`${DISPLAY} text-xl font-bold`}>Uuenda Stuudiumist</h2>
@@ -352,7 +352,7 @@ export function ImportModal({ onClose, onImported, extensionInstalled = false })
             "Lohista salvestatud .html fail allolevasse kasti.",
           ].map((t, i) => (
             <li key={i} className="flex gap-3">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E3F1E4] text-[12px] font-bold tabular-nums text-[#3E7A47]">{i + 1}</span>
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-leaf text-[12px] font-bold tabular-nums text-leaf-ink">{i + 1}</span>
               <span>{t}</span>
             </li>
           ))}
@@ -374,7 +374,7 @@ export function ImportModal({ onClose, onImported, extensionInstalled = false })
             handleFile(e.dataTransfer.files?.[0]);
           }}
           className={`mt-4 flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed p-6 text-center transition ${
-            dragging ? "border-emerald-500 bg-[#E3F1E4]" : "border-stone-300 bg-white hover:border-stone-400"
+            dragging ? "border-emerald-500 bg-leaf" : "border-stone-300 bg-card hover:border-stone-400"
           }`}
         >
           {busy ? <Loader2 size={28} className="animate-spin text-stone-400" aria-hidden="true" /> : <Upload size={28} className="text-stone-400" aria-hidden="true" />}
@@ -383,14 +383,14 @@ export function ImportModal({ onClose, onImported, extensionInstalled = false })
           <input id="import-file" ref={inputRef} type="file" accept=".html,.htm,text/html" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
         </div>
 
-        {error && <p role="alert" className="mt-3 rounded-xl bg-[#FBE6EC] px-3 py-2 text-[13px] font-medium text-rose-800">{error}</p>}
+        {error && <p role="alert" className="mt-3 rounded-xl bg-blush px-3 py-2 text-[13px] font-medium text-rose-800 dark:text-rose-300">{error}</p>}
         {result && (
-          <div role="status" className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-[#E3F1E4] px-3 py-2.5">
-            <span className="flex items-center gap-2 text-[14px] font-semibold text-emerald-800">
+          <div role="status" className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-leaf px-3 py-2.5">
+            <span className="flex items-center gap-2 text-[14px] font-semibold text-emerald-800 dark:text-emerald-300">
               <CheckCircle2 size={16} aria-hidden="true" />
               {result.lessons.length} tundi laaditud
             </span>
-            <button type="button" onClick={onClose} className="rounded-lg bg-white px-3 py-1.5 text-[13px] font-semibold text-stone-800">
+            <button type="button" onClick={onClose} className="rounded-lg bg-card px-3 py-1.5 text-[13px] font-semibold text-stone-800">
               Vaata päevikut
             </button>
           </div>
