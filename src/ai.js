@@ -2,14 +2,50 @@ import { supabase } from "./supabase";
 
 export const aiAvailable = () => Boolean(supabase);
 
+const DIRECT_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+function readAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1]);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+// Proovib pildi avada kahel viisil (mõni brauser ei oska createImageBitmap'iga kõike).
+async function decodeImage(file) {
+  try {
+    const bmp = await createImageBitmap(file);
+    return { source: bmp, width: bmp.width, height: bmp.height };
+  } catch {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      img.src = url;
+      await img.decode();
+      return { source: img, width: img.naturalWidth, height: img.naturalHeight };
+    } finally {
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  }
+}
+
 // Vähendab pildi (tahvlifoto võib olla 10+ MB) enne saatmist.
 async function imageToBase64(file, maxSide = 1600) {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  let decoded;
+  try {
+    decoded = await decodeImage(file);
+  } catch {
+    // Ei saanud avada: kui fail on juba sobivas vormingus ja väike, saadame selle otse.
+    if (DIRECT_TYPES.includes(file.type) && file.size < 4_500_000) return { data: await readAsBase64(file), mediaType: file.type };
+    throw new Error("Seda pilti ei õnnestunud avada (tõenäoliselt iPhone'i HEIC-formaat). Tee pildist ekraanipilt või salvesta see JPG-na ja proovi uuesti.");
+  }
+  const scale = Math.min(1, maxSide / Math.max(decoded.width, decoded.height));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  canvas.width = Math.max(1, Math.round(decoded.width * scale));
+  canvas.height = Math.max(1, Math.round(decoded.height * scale));
+  canvas.getContext("2d").drawImage(decoded.source, 0, 0, canvas.width, canvas.height);
   const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
   return { data: dataUrl.split(",")[1], mediaType: "image/jpeg" };
 }
