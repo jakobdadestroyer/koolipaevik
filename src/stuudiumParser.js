@@ -105,6 +105,39 @@ function parseEvent(entry, today) {
   return { subject, date, status, statusType, topic: cleanText(entry.querySelector(SEL.eventTopic)) };
 }
 
+
+// Tulevased kodutööd ja kontrolltööd ("Ülesanded, kodutööd ja kontrolltööd")
+function parseUpcoming(doc) {
+  const out = [];
+  const seen = new Set();
+  doc.querySelectorAll(".todo_container").forEach((el) => {
+    const key = el.getAttribute("data-item-key") || "";
+    const raw = el.getAttribute("data-date") || "";
+    if (!/^\d{8}$/.test(raw) || seen.has(key)) return;
+    seen.add(key);
+    const badge = el.querySelector(".scheduled-type-badge");
+    const isTest = key.startsWith("Test-") || (badge && /scheduled-type-badge-test/.test(badge.className));
+    out.push({
+      id: key || `u-${raw}-${out.length}`,
+      date: `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`,
+      subject: el.querySelector(".subject_name")?.textContent.replace(/\s+/g, " ").trim() || "",
+      type: isTest ? "test" : "homework",
+      typeLabel: badge?.textContent.trim() || (isTest ? "Kontrolltöö" : "Kodutöö"),
+      content: cleanText(el.querySelector(".todo_content")),
+    });
+  });
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// "Puudumisi kokku: 42 (10 põhjuseta)"
+function parseAbsenceSummary(doc) {
+  for (const el of doc.querySelectorAll(".section-infomessage")) {
+    const m = el.textContent.replace(/\s+/g, " ").match(/Puudumisi kokku:\s*(\d+)(?:\s*\((\d+)\s*põhjuseta\))?/i);
+    if (m) return { total: Number(m[1]), unexcused: m[2] ? Number(m[2]) : null };
+  }
+  return null;
+}
+
 // Peamine funktsioon: HTML-tekst -> { generatedAt, lessons, messages }
 export function parseStuudiumHtml(html, { today = new Date(), savedAt = new Date() } = {}) {
   const doc = new DOMParser().parseFromString(html, "text/html");
@@ -183,5 +216,11 @@ export function parseStuudiumHtml(html, { today = new Date(), savedAt = new Date
   });
 
   lessons.sort((a, b) => b.date.localeCompare(a.date));
-  return { generatedAt: savedAt.toISOString(), lessons, messages: [] };
+  return {
+    generatedAt: savedAt.toISOString(),
+    lessons,
+    messages: [],
+    upcoming: parseUpcoming(doc),
+    absenceSummary: parseAbsenceSummary(doc),
+  };
 }
