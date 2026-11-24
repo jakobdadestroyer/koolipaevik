@@ -142,6 +142,14 @@ export const MOCK_DATA = {
     },
   ],
 
+  upcoming: [
+    { id: "u-1", date: "2026-11-24", subject: "Inglise keel", type: "homework", typeLabel: "Kodutöö", content: "Kirjuta 250-sõnaline essee teemal 'Should school start later?'" },
+    { id: "u-2", date: "2026-11-25", subject: "Hispaania keel B1", type: "homework", typeLabel: "Kodutöö", content: "Töövihik lk 41–42" },
+    { id: "u-3", date: "2026-11-26", subject: "Lai matemaatika", type: "test", typeLabel: "Kontrolltöö", content: "Logaritmid ja logaritmfunktsioon" },
+    { id: "u-4", date: "2026-12-02", subject: "Inglise keel", type: "test", typeLabel: "Kontrolltöö", content: "Unit 4 vocabulary" },
+  ],
+  absenceSummary: null,
+
   messages: [
     {
       id: "m-1",
