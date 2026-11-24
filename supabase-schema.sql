@@ -19,3 +19,6 @@ create policy "Oma andmete lugemine"    on public.user_data for select using (au
 create policy "Oma andmete lisamine"    on public.user_data for insert with check (auth.uid() = user_id);
 create policy "Oma andmete muutmine"    on public.user_data for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Oma andmete kustutamine" on public.user_data for delete using (auth.uid() = user_id);
+
+-- Õigused sisselogitud kasutajatele (reeglid ülal piiravad need ainult oma reale)
+grant select, insert, update, delete on public.user_data to authenticated;
