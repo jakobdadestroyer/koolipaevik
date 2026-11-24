@@ -5,6 +5,7 @@ import { supabase, loadUserData, saveDiary, saveNotes } from "./supabase";
 import { AuthScreen, NewPasswordScreen, ImportModal } from "./Account";
 import { useExtensionSnapshot, mergeDiary, isNewer } from "./extensionBridge";
 import { useTheme } from "./theme";
+import { aiAvailable, generateWithAI, lessonContext, PROMPT_IDEAS } from "./ai";
 
 /* =====================================================================
    Abifunktsioonid
@@ -128,6 +129,7 @@ async function synthesizeNotes({ lesson, imageFile }) {
 }
 
 function notesToText(n) {
+  if (n.markdown) return `${n.subject} · ${formatDayHeading(n.date)}\n${n.title}\n\n${n.markdown}`;
   return [`${n.subject} · ${formatDayHeading(n.date)}`, n.title, "", ...n.sections.flatMap((s) => [s.heading.toUpperCase(), ...s.items.map((i) => `• ${i}`), ""])].join("\n");
 }
 
@@ -438,6 +440,13 @@ function CheatSheetView({ saved, onDelete }) {
 }
 
 function NotesBody({ notes }) {
+  if (notes.markdown) {
+    return (
+      <div className="mt-3">
+        <Markdown text={notes.markdown} />
+      </div>
+    );
+  }
   return (
     <div className="mt-3 space-y-3">
       {notes.sections.map((s) => (
@@ -472,7 +481,166 @@ function NotesBody({ notes }) {
   );
 }
 
-function NotesModal({ lesson, onClose, onSave }) {
+/* =====================================================================
+   Lihtne Markdowni kuvamine (AI vastused): pealkirjad, loetelud, rasvane, kood
+   ===================================================================== */
+
+function inline(text, keyBase) {
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  return parts.map((p, i) => {
+    if (p.startsWith("**") && p.endsWith("**")) return <strong key={keyBase + i} className="font-semibold text-stone-900">{p.slice(2, -2)}</strong>;
+    if (p.startsWith("`") && p.endsWith("`")) return <code key={keyBase + i} className="rounded bg-stone-100 px-1 text-[13px]">{p.slice(1, -1)}</code>;
+    return p;
+  });
+}
+
+function Markdown({ text }) {
+  const blocks = [];
+  let list = null;
+  const flush = () => {
+    if (list) blocks.push(list);
+    list = null;
+  };
+  text.split("\n").forEach((raw, i) => {
+    const line = raw.trimEnd();
+    const h = line.match(/^(#{1,4})\s+(.*)/);
+    const ul = line.match(/^\s*[-*•]\s+(.*)/);
+    const ol = line.match(/^\s*(\d+)[.)]\s+(.*)/);
+    if (h) {
+      flush();
+      const level = h[1].length;
+      blocks.push(
+        <h4 key={i} className={level <= 2 ? "pt-2 font-['Bricolage_Grotesque',system-ui,sans-serif] text-[16px] font-bold text-stone-900" : "pt-1 text-[12px] font-bold uppercase tracking-[0.06em] text-stone-500"}>
+          {inline(h[2], i)}
+        </h4>
+      );
+    } else if (ul || ol) {
+      const type = ul ? "ul" : "ol";
+      if (!list || list.type !== type) {
+        flush();
+        list = { type, items: [], key: i };
+      }
+      list.items.push(inline((ul ? ul[1] : ol[2]), i));
+    } else if (!line.trim()) {
+      flush();
+    } else {
+      flush();
+      blocks.push(<p key={i} className="text-[14px] leading-relaxed text-stone-800">{inline(line, i)}</p>);
+    }
+  });
+  flush();
+  return (
+    <div className="space-y-2">
+      {blocks.map((b) =>
+        b.type === "ul" || b.type === "ol" ? (
+          b.type === "ul" ? (
+            <ul key={b.key} className="list-disc space-y-1 pl-5 text-[14px] leading-relaxed text-stone-800">{b.items.map((it, j) => <li key={j}>{it}</li>)}</ul>
+          ) : (
+            <ol key={b.key} className="list-decimal space-y-1 pl-5 text-[14px] leading-relaxed text-stone-800">{b.items.map((it, j) => <li key={j}>{it}</li>)}</ol>
+          )
+        ) : (
+          b
+        )
+      )}
+    </div>
+  );
+}
+
+/* AI-konspekti kast: oma soov + Claude'i vastus */
+function AIBox({ context, imageFile, meta, onSave, defaultPrompt = "" }) {
+  const [prompt, setPrompt] = useState(defaultPrompt);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState("");
+  const [msg, setMsg] = useState("");
+
+  async function run() {
+    setBusy(true);
+    setError("");
+    setMsg("");
+    try {
+      setResult(await generateWithAI({ context, prompt, imageFile }));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-violet-200 dark:border-violet-900 bg-gradient-to-b from-violet-50 dark:from-violet-950/40 to-card p-4">
+      <div className="flex items-center gap-2">
+        <Sparkles size={16} className="text-violet-600 dark:text-violet-300" aria-hidden="true" />
+        <h3 className="text-[14px] font-bold text-stone-900">AI-konspekt</h3>
+      </div>
+      <label htmlFor="ai-prompt" className="mt-2 block text-[13px] text-stone-600">
+        Mida konspekt peaks sisaldama?{imageFile ? " Pilt võetakse arvesse." : ""}
+      </label>
+      <textarea
+        id="ai-prompt"
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        rows={3}
+        placeholder="Nt: tee 10 kontrollküsimust koos vastustega ja selgita valemeid"
+        className="mt-1.5 w-full rounded-xl border border-stone-300 bg-card px-3 py-2 text-[14px] text-stone-900 outline-none placeholder:text-stone-400 focus:border-stone-500"
+      />
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {PROMPT_IDEAS.map((p) => (
+          <button key={p} type="button" onClick={() => setPrompt(p)} className="rounded-full bg-card px-2.5 py-1 text-[12px] font-medium text-stone-600 ring-1 ring-stone-900/10 hover:text-stone-900">
+            {p}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={run}
+        disabled={busy}
+        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-[14px] font-semibold text-paper hover:bg-stone-800 disabled:opacity-70"
+      >
+        {busy ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Sparkles size={16} aria-hidden="true" />}
+        {busy ? "Koostan… (kuni minut)" : result ? "Koosta uuesti" : "Koosta AI-ga"}
+      </button>
+      {error && <p role="alert" className="mt-3 rounded-xl bg-blush px-3 py-2 text-[13px] font-medium text-rose-800 dark:text-rose-300">{error}</p>}
+      {result && (
+        <div className="mt-4 border-t border-stone-900/10 pt-3">
+          <Markdown text={result} />
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                onSave({ ...meta, markdown: result, sections: [], source: prompt ? `AI · ${prompt}` : "AI" });
+                setMsg("Salvestatud spikrisse");
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 px-3.5 py-2 text-[13px] font-semibold text-paper hover:bg-stone-800"
+            >
+              <BookMarked size={14} aria-hidden="true" />
+              Salvesta spikrisse
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(result);
+                  setMsg("Kopeeritud");
+                } catch {
+                  setMsg("Kopeerimine ebaõnnestus");
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-card px-3.5 py-2 text-[13px] font-semibold text-stone-800 ring-1 ring-stone-900/10 hover:bg-stone-50"
+            >
+              <ClipboardCopy size={14} aria-hidden="true" />
+              Kopeeri
+            </button>
+            {msg && <span role="status" className="text-[13px] font-semibold text-emerald-700 dark:text-emerald-300">{msg}</span>}
+          </div>
+        </div>
+      )}
+      <p className="mt-3 text-[11px] text-stone-400">AI võib eksida. Kontrolli olulist õpikust või vihikust.</p>
+    </section>
+  );
+}
+
+function NotesModal({ lesson, lessons = [], onClose, onSave }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -575,6 +743,14 @@ function NotesModal({ lesson, onClose, onSave }) {
           </div>
 
           {/* AI sünteesi kast */}
+          {aiAvailable() ? (
+            <AIBox
+              context={lessonContext(lesson, lessons)}
+              imageFile={file}
+              meta={{ title: lesson.topic, subject: lesson.subject, date: lesson.date }}
+              onSave={onSave}
+            />
+          ) : (
           <section className="rounded-2xl border border-violet-200 dark:border-violet-900 bg-gradient-to-b from-violet-50 dark:from-violet-950/40 to-card p-4">
             <div className="flex items-center gap-2">
               <Sparkles size={16} className="text-violet-600 dark:text-violet-300" aria-hidden="true" />
@@ -633,6 +809,7 @@ function NotesModal({ lesson, onClose, onSave }) {
             )}
             <p className="mt-3 text-[11px] text-stone-400">Näidisrežiim: konspekt koostatakse tunni kirjelduse põhjal. Päris AI ühendatakse hiljem.</p>
           </section>
+          )}
         </div>
       </div>
     </div>
@@ -770,6 +947,16 @@ function TestPrepModal({ test, lessons, upcoming, onClose, onSave }) {
             )}
           </div>
           <p className="mt-3 text-[11px] text-stone-400">Koostatud sinu tundide teemadest ja kirjeldustest. Kontrolli õpikust ja vihikust üle.</p>
+          {aiAvailable() && (
+            <div className="mt-5">
+              <AIBox
+                context={notesToText(notes)}
+                meta={{ title: notes.title, subject: notes.subject, date: notes.date }}
+                onSave={onSave}
+                defaultPrompt="Koosta selle põhjal kontrolltööks kordamiskonspekt: põhimõisted, valemid/reeglid, näited ja 10 harjutusküsimust koos vastustega."
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1182,7 +1369,7 @@ function Diary({ data, saved, onSaveNote, onDeleteNote, onImport, account }) {
       </nav>
 
       {prepTest && <TestPrepModal test={prepTest} lessons={data.lessons} upcoming={data.upcoming} onClose={() => setPrepTest(null)} onSave={onSaveNote} />}
-      {notesLesson && <NotesModal lesson={notesLesson} onClose={() => setNotesLesson(null)} onSave={onSaveNote} />}
+      {notesLesson && <NotesModal lesson={notesLesson} lessons={data.lessons} onClose={() => setNotesLesson(null)} onSave={onSaveNote} />}
     </div>
   );
 }
